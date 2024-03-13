@@ -1,49 +1,60 @@
-// const express = require('express');
-// const app = express();
+const Express = require("express");
+const MongoClient = require("mongodb").MongoClient;
+const cors = require("cors");
+const multer = require("multer");
 
-// app.get('/', (req, res) => {
-//   res.send('Hello World!');
-// });
+let app = Express();
+app.use(cors());
 
-// const PORT = 3000;
-// app.listen(PORT, () => {
-//   console.log(`Server is running on port ${PORT}`);
-// });
+let CONNECTION_STRING = "mongodb+srv://admin:Niagara33@cluster0.wdskhgs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 
-const express = require('express');
-const app = express();
 
-// Middleware для парсингу JSON тіл запитів
-app.use(express.json());
 
-app.get('/', (req, res) => {
-  res.send("{id: 2, name: 'wdaergth', icon: 'fa-check-circle', editing: false}");
+
+
+let DATABASENAME = "TaskManagerApp";
+let database;
+
+const PORT = 5031;
+app.listen(PORT, ()=>{
+    MongoClient.connect(CONNECTION_STRING, (error,client)=>{
+        database=client.db(DATABASENAME);
+        console.log('MONGO DB Connection OK!');
+        console.log(`Server is running on port ${PORT}`);
+    });
+})
+
+
+app.get('/api/tasknanagerapp/get', (request,response)=>{
+    database.collection("TaskManagerAppCollection").find({}).toArray((error,result)=>{
+        response.send(result);
+    })
 });
 
-// POST запит, для створення даних
-app.post('/', (req, res) => {
-  // Тут ви обробляєте тіло запиту
-  console.log(req.body); // req.body містить дані відправлені клієнтом
-  res.status(201).send('Data created');
+
+app.post('/api/tasknanagerapp/add',multer().none(),(request,response)=>{
+    database.collection("TaskManagerAppCollection").count({}, function(error,numOfDocs){
+        database.collection("TaskManagerAppCollection").insertOne({
+            id:(numOfDocs+1).toString(),
+            title:request.body.newData
+        });
+        response.json("Added Done");
+    })
 });
 
-// PUT запит, для оновлення існуючих даних
-app.put('/:id', (req, res) => {
-  // req.params.id для отримання "id" з URL
-  // req.body для отримання даних, які потрібно оновити
-  console.log(`Updating data with id ${req.params.id}`, req.body);
-  res.send(`Data with id ${req.params.id} updated`);
+app.post('/api/tasknanagerapp/del',(request,response)=>{
+    database.collection("TaskManagerAppCollection").deleteOne({
+        id:request.query.id
+    })
+        response.json("Delete Done!");
+   
 });
 
-// DELETE запит, для видалення даних
-app.delete('/:id', (req, res) => {
-  // req.params.id для отримання "id" з URL
-  console.log(`Deleting data with id ${req.params.id}`);
-  res.send(`Data with id ${req.params.id} deleted`);
-});
-
-const PORT = 3001;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.post('/api/tasknanagerapp/upd',multer().none(),(request,response)=>{
+    const { title, description, completed } = request.body;
+    database.collection("tasknanagerappcollection").findByIdAndUpdate(request.params.id, {
+        title
+    }, {new: true})
+        response.json("UPdate Done!");
 });
