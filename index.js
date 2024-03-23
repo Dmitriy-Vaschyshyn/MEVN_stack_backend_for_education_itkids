@@ -51,10 +51,19 @@ app.post('/api/tasknanagerapp/del',(request,response)=>{
    
 });
 
-app.post('/api/tasknanagerapp/upd',multer().none(),(request,response)=>{
-    const { title, description, completed } = request.body;
-    database.collection("tasknanagerappcollection").findByIdAndUpdate(request.params.id, {
-        title
-    }, {new: true})
-        response.json("UPdate Done!");
+app.post('/api/tasknanagerapp/upd', multer().none(), (request, response) => {
+    const title = request.body.newData;
+    
+    database.collection("TaskManagerAppCollection").findOneAndUpdate(
+        { id: request.query.id },
+        { $set: { title } },
+        { returnOriginal: false }, 
+        (error, result) => {
+            if (error) {
+                response.status(500).json("Error updating task");
+            } else {
+                response.json("Update Done!");
+            }
+        }
+    );
 });
