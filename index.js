@@ -6,10 +6,11 @@ const multer = require("multer");
 let app = Express();
 app.use(cors());
 
-let CONNECTION_STRING = "mongodb+srv://admin:Niagara33@cluster0.wdskhgs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+// app.use(Express.json()); // Для розбору JSON-запитів
+// app.use(Express.urlencoded({ extended: true })); // Для розбору URL-encoded запитів
 
-
-
+// let CONNECTION_STRING = "mongodb+srv://admin:Niagara33@cluster0.wdskhgs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+let CONNECTION_STRING = "mongodb+srv://admin:747747@cluster0.2puczdg.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 
 
@@ -17,13 +18,17 @@ let DATABASENAME = "TaskManagerApp";
 let database;
 
 const PORT = 5031;
-app.listen(PORT, ()=>{
-    MongoClient.connect(CONNECTION_STRING, (error,client)=>{
-        database=client.db(DATABASENAME);
-        console.log('MONGO DB Connection OK!');
+MongoClient.connect(CONNECTION_STRING, { useUnifiedTopology: true }).then(client => {
+    console.log('MONGO DB Connection OK!');
+    database = client.db(DATABASENAME);
+
+    app.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`);
     });
-})
+}).catch(error => {
+    console.error('MONGO DB Connection Error:', error);
+});
+
 
 
 app.get('/api/tasknanagerapp/get', (request,response)=>{
@@ -32,14 +37,16 @@ app.get('/api/tasknanagerapp/get', (request,response)=>{
     })
 });
 
-
 app.post('/api/tasknanagerapp/add',multer().none(),(request,response)=>{
     database.collection("TaskManagerAppCollection").count({}, function(error,numOfDocs){
         database.collection("TaskManagerAppCollection").insertOne({
             id:(numOfDocs+1).toString(),
-            title:request.body.newData
+            name:request.body.name,
+            author:request.body.author,
+            data:request.body.createdAt
         });
         response.json("Added Done");
+        console.log(request.body.name)
     })
 });
 
@@ -52,11 +59,13 @@ app.post('/api/tasknanagerapp/del',(request,response)=>{
 });
 
 app.post('/api/tasknanagerapp/upd', multer().none(), (request, response) => {
-    const title = request.body.newData;
-    
+    const name = request.body.name;
+    const author = request.body.author;
+
+    console.log(name);
     database.collection("TaskManagerAppCollection").findOneAndUpdate(
         { id: request.query.id },
-        { $set: { title } },
+        { $set: { name, author} },
         { returnOriginal: false }, 
         (error, result) => {
             if (error) {
