@@ -6,11 +6,7 @@ const multer = require("multer");
 let app = Express();
 app.use(cors());
 
-// app.use(Express.json()); // Для розбору JSON-запитів
-// app.use(Express.urlencoded({ extended: true })); // Для розбору URL-encoded запитів
-
-// let CONNECTION_STRING = "mongodb+srv://admin:Niagara33@cluster0.wdskhgs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
-let CONNECTION_STRING = "mongodb+srv://admin:747747@cluster0.2puczdg.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const { CONNECTION_STRING } = require('./config');
 
 
 
