@@ -41,7 +41,8 @@ app.post('/api/tasknanagerapp/add',multer().none(),(request,response)=>{
             id:(numOfDocs+1).toString(),
             name:request.body.name,
             author:request.body.author,
-            data:request.body.createdAt
+            data:request.body.createdAt,
+            category:request.body.category
         });
         response.json("Added Done");
         console.log(request.body.name)
@@ -59,11 +60,12 @@ app.post('/api/tasknanagerapp/del',(request,response)=>{
 app.post('/api/tasknanagerapp/upd', multer().none(), (request, response) => {
     const name = request.body.name;
     const author = request.body.author;
+    const category = request.body.category;
 
     console.log(name);
     database.collection("TaskManagerAppCollection").findOneAndUpdate(
         { id: request.query.id },
-        { $set: { name, author} },
+        { $set: { name, author, category} },
         { returnOriginal: false }, 
         (error, result) => {
             if (error) {
