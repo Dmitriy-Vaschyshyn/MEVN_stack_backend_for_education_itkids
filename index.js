@@ -34,6 +34,23 @@ app.get('/api/tasknanagerapp/get', (request,response)=>{
         response.send(result);
     })
 });
+app.get('/api/tasknanagerapp/data/:id', (request,response)=>{
+    const taskId = request.params.id;  // Отримуємо id задачі з URL
+    console.log(taskId);
+
+    // Використання ObjectId для пошуку документу за id у MongoDB
+    database.collection("TaskManagerAppCollection").findOne({id: taskId}, (error, result) => {
+        if (error) {
+            response.status(500).send("Error retrieving data from the database.");
+        } else {
+            if (result) {
+                response.send(result);
+            } else {
+                response.status(404).send("Task not found.");
+            }
+        }
+    });
+});
 
 app.post('/api/tasknanagerapp/add',multer().none(),(request,response)=>{
     database.collection("TaskManagerAppCollection").count({}, function(error,numOfDocs){
