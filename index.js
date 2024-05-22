@@ -1,7 +1,9 @@
-const Express = require("express");
-const MongoClient = require("mongodb").MongoClient;
-const cors = require("cors");
-const multer = require("multer");
+
+const Express = require("express"); 
+const MongoClient = require("mongodb").MongoClient; 
+const cors = require("cors"); 
+const multer = require("multer"); 
+const bcrypt = require('bcrypt'); // для хешування паролів нужно установить
 
 let app = Express();
 
@@ -100,3 +102,56 @@ app.post('/api/tasknanagerapp/upd', multer().none(), (request, response) => {
         }
     );
 });
+app.post('/api/tasknanagerapp/login', (request,response)=>{ 
+    const username = request.body.username; 
+    const password = request.body.password; 
+ 
+    if(!username || !password) { 
+        return response.status(400).send('UserName and Password are required!'); 
+    } 
+ 
+ 
+    database.collection("Users").findOne({username:username}, (error, user)=>{ 
+        if(error){ 
+            return response.status(500).send(' Error Login!');  
+        } 
+ 
+        if(!user) { 
+            return response.status(404).send('User Is Not Found!');  
+        } 
+ 
+ 
+        const isPasswordValid = bcrypt.compare(password, user.password); 
+ 
+ 
+        if(!isPasswordValid) { 
+            return response.status(401).send("Invalid Password!") 
+        } 
+ 
+ 
+        response.json({message:"Login Successful!", userId: user.id, userName: user.username}); 
+    }) 
+})
+app.post('/api/tasknanagerapp/register', (request,response)=>{ 
+    const username = request.body.username; 
+    const password = request.body.password; 
+    const email = request.body.email;
+ 
+    if(!username || !password) { 
+        return response.status(400).send('UserName and Password are required!'); 
+    } 
+ 
+    const hashedPassword = bcrypt.hash(password, 10); 
+ 
+    database.collection("Users").insertOne({ 
+        username: username, 
+        password: hashedPassword,
+        email: email
+    }, (error, result) => { 
+        if(error){ 
+            return response.status(500).send('Error for register new User!');  
+        } 
+        response.status(201).send('User register succesfully!'); 
+        response.json({message:"Login Successful!", userId: user.id, userName: user.username}); 
+    }) 
+})
