@@ -157,11 +157,18 @@ app.post('/api/tasknanagerapp/register', multer().none(),(request,response)=>{
         if(email) { 
             return response.status(404).send('This Email is already in use');  
         }
+        const maxUserIdUser = database.collection('Users').findOne({}, { sort: { userId: -1 } });
+        let userId = 1;
+        if (maxUserIdUser) {
+            userId = maxUserIdUser.userId + 1;
+        }
         const hashedPassword = bcrypt.hash(password, 10); 
+        
         database.collection("Users").insertOne({ 
             username: username, 
             password: hashedPassword,
-            email: email
+            email: email,
+            userId:userId
         }, (error, result) => { 
             if(error){ 
                 return response.status(500).send('Error for register new User!');  
