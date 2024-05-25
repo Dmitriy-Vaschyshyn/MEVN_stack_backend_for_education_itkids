@@ -102,37 +102,42 @@ app.post('/api/tasknanagerapp/upd', multer().none(), (request, response) => {
         }
     );
 });
-app.post('/api/tasknanagerapp/login', (request,response)=>{ 
+app.post('/api/tasknanagerapp/login', multer().none(),(request,response)=>{ 
     const username = request.body.username; 
     const password = request.body.password; 
+    const email = request.body.email;
  
-    if(!username || !password) { 
-        return response.status(400).send('UserName and Password are required!'); 
+    if(!username || !password || !email) { 
+        return response.status(400).send('UserName and Password and Email are required!'); 
     } 
  
  
-    database.collection("Users").findOne({username:username}, (error, user)=>{ 
+    database.collection("Users").findOne({email:email}, (error, user)=>{ 
         if(error){ 
             return response.status(500).send(' Error Login!');  
         } 
  
-        if(!user) { 
-            return response.status(404).send('User Is Not Found!');  
+        if(!email) { 
+            return response.status(404).send('Email Is Not Found!');  
         } 
  
  
-        const isPasswordValid = bcrypt.compare(password, user.password); 
+        
+        if(bcrypt.hash(password,10)==user.password){
+            response.json({message:"Login Successful!", userId: user.id, userName: user.username}); 
+
+        }
  
  
-        if(!isPasswordValid) { 
+        if(bcrypt.hash(password,10)!=user.password) { 
             return response.status(401).send("Invalid Password!") 
         } 
  
  
-        response.json({message:"Login Successful!", userId: user.id, userName: user.username}); 
+        
     }) 
 })
-app.post('/api/tasknanagerapp/register', (request,response)=>{ 
+app.post('/api/tasknanagerapp/register', multer().none(),(request,response)=>{ 
     const username = request.body.username; 
     const password = request.body.password; 
     const email = request.body.email;
@@ -141,17 +146,38 @@ app.post('/api/tasknanagerapp/register', (request,response)=>{
         return response.status(400).send('UserName and Password are required!'); 
     } 
  
-    const hashedPassword = bcrypt.hash(password, 10); 
+    
  
-    database.collection("Users").insertOne({ 
-        username: username, 
-        password: hashedPassword,
-        email: email
-    }, (error, result) => { 
+    
+    database.collection("Users").findOne({email:email}, (error, user)=>{ 
         if(error){ 
-            return response.status(500).send('Error for register new User!');  
+            return response.status(500).send(' Error Register!');  
         } 
-        response.status(201).send('User register succesfully!'); 
+ 
+        if(email) { 
+            return response.status(404).send('This Email is already in use');  
+        }
+        const hashedPassword = bcrypt.hash(password, 10); 
+        database.collection("Users").insertOne({ 
+            username: username, 
+            password: hashedPassword,
+            email: email
+        }, (error, result) => { 
+            if(error){ 
+                return response.status(500).send('Error for register new User!');  
+            } 
+            response.status(201).send('User register succesfully!'); 
+             
+        }) 
+ 
+ 
+        
+ 
+ 
+        
+ 
+ 
         response.json({message:"Login Successful!", userId: user.id, userName: user.username}); 
     }) 
+    
 })
