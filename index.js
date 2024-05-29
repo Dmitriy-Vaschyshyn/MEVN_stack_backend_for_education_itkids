@@ -32,7 +32,8 @@ MongoClient.connect(CONNECTION_STRING, { useUnifiedTopology: true }).then(client
 
 
 app.get('/api/tasknanagerapp/get', (request,response)=>{
-    database.collection("TaskManagerAppCollection").find({}).toArray((error,result)=>{
+    userId:request.body.userId
+    database.collection("TaskManagerAppCollection").find({userId:userId}).toArray((error,result)=>{
         response.send(result);
     })
 });
@@ -65,7 +66,8 @@ app.post('/api/tasknanagerapp/add',multer().none(),(request,response)=>{
             edited:request.body.edited,
             completed:request.body.completed,
             added:request.body.timeAdded,
-            timecomplited:request.body.timeComplited
+            timecomplited:request.body.timeComplited,
+            userId:request.body.userId
         });
         response.json("Added Done");
         console.log(request.body.name)
@@ -136,55 +138,109 @@ app.post('/api/tasknanagerapp/login', multer().none(),(request,response)=>{
  
         
     }) 
+    
 })
-app.post('/api/tasknanagerapp/register', multer().none(),(request,response)=>{ 
-    const username = request.body.username; 
-    const password = request.body.password; 
-    const email = request.body.email;
- 
-    if(!username || !password) { 
-        return response.status(400).send('UserName and Password are required!'); 
-    } 
- 
-    
- 
-    
-    database.collection("Users").findOne({email:email}, (error, user)=>{ 
-        if(error){ 
+
+app.post('/api/tasknanagerapp/register', multer().none(), (request,response)=>{
+
+    console.log(request.body);
+
+    const username = request.body.username;
+    const password = request.body.password;
+    const email=request.body.email
+
+    if(!username || !password) {
+        return response.status(400).send('UserName and Password are required!');
+    }
+    database.collection("Users").findOne({email:email}, (error, user)=>{
+        if(error){
             return response.status(500).send(' Error Register!');  
-        } 
+        }
+        console.log(user)
  
-        if(email) { 
+        if(user) {
             return response.status(404).send('This Email is already in use');  
+            
         }
-        const maxUserIdUser = database.collection('Users').findOne({}, { sort: { userId: -1 } });
-        let userId = 1;
-        if (maxUserIdUser) {
-            userId = maxUserIdUser.userId + 1;
-        }
-        const hashedPassword = bcrypt.hash(password, 10); 
-        
-        database.collection("Users").insertOne({ 
-            username: username, 
-            password: hashedPassword,
-            email: email,
-            userId:userId
-        }, (error, result) => { 
-            if(error){ 
-                return response.status(500).send('Error for register new User!');  
-            } 
-            response.status(201).send('User register succesfully!'); 
-             
-        }) 
- 
- 
-        
- 
- 
-        
- 
- 
-        response.json({message:"Login Successful!", userId: user.id, userName: user.username}); 
-    }) 
+
+    const hashedPassword = bcrypt.hash(password, 10);
+
     
+
+
+    database.collection("Users").insertOne({
+        username: username,
+        password: hashedPassword,
+        email:email
+    }, (error, result) => {
+        if(error){
+            return response.status(500).send('Error for register new User!'); 
+        }
+        
+    })
+    database.collection("Users").findOne({email:email}, (error, user)=>{
+        if(error){
+            response.status(500).send("Server baobab")
+    
+        }
+        if(user){
+            response.status(201).json({
+                userId:user._id
+            })
+    
+            
+        }
+    
+     })
+
+    
+    
+ })
+ 
+})
+
+
+
+
+
+
+app.post('/api/tasknanagerapp/registere', multer().none(), (request,response)=>{
+
+    console.log(request.body);
+
+    const username = request.body.username;
+    const password = request.body.password;
+    const email=request.body.email
+
+    if(!username || !password) {
+        return response.status(400).send('UserName and Password are required!');
+    }
+    database.collection("Users").findOne({email:email}, (error, user)=>{
+        if(error){
+            return response.status(500).send(' Error Register!');  
+        }
+        console.log(user)
+ 
+        if(user) {
+            return response.status(404).send('This Email is already in use');  
+            
+        }
+
+    const hashedPassword = bcrypt.hash(password, 10);
+
+    
+
+
+    database.collection("Users").insertOne({
+        username: username,
+        password: hashedPassword,
+        email:email
+    }, (error, result) => {
+        if(error){
+            return response.status(500).send('Error for register new User!'); 
+        }
+        response.status(201).send('User register succesfully!');
+    })
+    
+ })
 })
