@@ -32,11 +32,19 @@ MongoClient.connect(CONNECTION_STRING, { useUnifiedTopology: true }).then(client
 
 
 app.get('/api/tasknanagerapp/get', (request,response)=>{
-    userId:request.body.userId
-    database.collection("TaskManagerAppCollection").find({userId:userId}).toArray((error,result)=>{
+    
+    database.collection("TaskManagerAppCollection").find({}).toArray((error,result)=>{
         response.send(result);
     })
 });
+app.post('/api/tasknanagerapp/user', multer().none(),(request,response)=>{
+    const userId=request.body.userId
+    
+    database.collection("TaskManagerAppCollection").find({userId:userId}).toArray((error,result)=>{
+        response.send(result);
+    })
+       
+})
 app.get('/api/tasknanagerapp/data/:id', (request,response)=>{
     const taskId = request.params.id;  // Отримуємо id задачі з URL
     console.log(taskId);
@@ -119,19 +127,21 @@ app.post('/api/tasknanagerapp/login', multer().none(),(request,response)=>{
             return response.status(500).send(' Error Login!');  
         } 
  
-        if(!email) { 
+        if(!user) { 
             return response.status(404).send('Email Is Not Found!');  
         } 
  
  
         
-        if(bcrypt.hash(password,10)==user.password){
-            response.json({message:"Login Successful!", userId: user.id, userName: user.username}); 
+        if(password==user.password){
+            response.status(201).json({
+                userId:user._id
+            })
 
         }
  
  
-        if(bcrypt.hash(password,10)!=user.password) { 
+        if(password!=user.password) { 
             return response.status(401).send("Invalid Password!") 
         } 
  
@@ -163,14 +173,15 @@ app.post('/api/tasknanagerapp/register', multer().none(), (request,response)=>{
             
         }
 
-    const hashedPassword = bcrypt.hash(password, 10);
+    // const hashedPassword = bcrypt.hash(password, 10);
+    // console.log(hashedPassword)
 
     
 
 
     database.collection("Users").insertOne({
         username: username,
-        password: hashedPassword,
+        password: password,
         email:email
     }, (error, result) => {
         if(error){
